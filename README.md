@@ -1,45 +1,50 @@
-# Complete School ERP Project
+# EduFlow SaaS - Complete School Management System
 
-A complete school management system built as a full-stack React + Express project. It includes student admissions, teachers, classes, subjects, attendance, fees, exams, results, timetable, notices, reports, authentication, and seeded demo data.
+This repository has been rebuilt as a complete School Management System SaaS inspired by the requested tutorial: **React + Tailwind CSS + Node.js + Express + MongoDB**.
 
-## Features
+The application is production-style and includes SaaS tenant support, authentication, admin dashboard, student management, admissions CRM, teachers/HR, payroll, finance, exams, results and printable certificates.
 
-- Secure login with JWT authentication
-- Dashboard with student, teacher, class, revenue, due, expense, and attendance summaries
-- Student admission and profile management
-- Teacher/staff management
-- Class, section, room, capacity, and monthly fee setup
-- Subject assignment to class and teacher
-- Daily attendance with class-wise bulk marking
-- Fee invoices, paid/partial/unpaid tracking, and monthly invoice generation
-- Expense management
-- Exam scheduling and result entry with automatic grade calculation
-- Timetable management
-- Notice board for students, parents, and teachers
-- Student printable report with fees, attendance, and exam results
-- User management for school staff roles
-- JSON-file persistence for easy local development
+## Modules
+
+- Authentication with JWT and hashed passwords
+- Role-based users and permissions
+- SaaS school tenant data model
+- Admin dashboard with charts and KPIs
+- Student management
+- Admission pipeline / CRM
+- Teacher and HR management
+- Class and section setup
+- Subject management
+- Attendance workflow and records
+- Fee invoice management
+- Monthly fee generator
+- Expenses
+- HR payroll processor
+- Exam schedule
+- Results with automatic grade calculation
+- Certificate issue and print preview
+- Notices and announcements
+
+## Tech Stack
+
+- Frontend: React, React Router, Tailwind CSS, Recharts, Lucide Icons, Axios
+- Backend: Node.js, Express.js, JWT, bcryptjs
+- Database: MongoDB with Mongoose when `MONGODB_URI` is configured
+- Local development fallback: JSON storage at `server/storage/eduflow-db.json`
 
 ## Demo Login
 
 ```text
-Email: admin@school.test
+Email: admin@eduflow.test
 Password: password123
 ```
 
-A second account is also seeded:
+Other seeded users:
 
 ```text
-Email: accounts@school.test
-Password: password123
+principal@eduflow.test / password123
+finance@eduflow.test / password123
 ```
-
-## Tech Stack
-
-- Frontend: React, Vite, plain CSS
-- Backend: Node.js, Express
-- Auth: bcryptjs + JSON Web Tokens
-- Database: JSON file at `server/data/db.json` seeded automatically on first run
 
 ## Run Locally
 
@@ -48,40 +53,67 @@ npm install
 npm run dev
 ```
 
-The React app runs on Vite and proxies API calls to the Express API.
+Frontend:
 
-- Frontend: <http://localhost:5173>
-- API: <http://localhost:5000/api/health>
+```text
+http://localhost:5173
+```
+
+Backend health check:
+
+```text
+http://localhost:5000/api/health
+```
+
+## Use MongoDB
+
+Create a `.env` file:
+
+```env
+PORT=5000
+JWT_SECRET=change-this-secret
+MONGODB_URI=mongodb://127.0.0.1:27017/eduflow_saas
+MONGODB_DB=eduflow_saas
+```
+
+Then run:
+
+```bash
+npm run dev
+```
+
+If `MONGODB_URI` is not set, the app runs with local JSON storage so it works immediately in development.
 
 ## Production Build
 
 ```bash
-npm install
 npm run build
 npm start
 ```
 
-The Express server serves the built frontend from `dist/` in production mode.
+In production mode, Express serves the compiled React app from `dist/`.
 
 ## Project Structure
 
 ```text
 .
 ├── server/
-│   ├── index.js      # Express API, auth, CRUD, reports
-│   └── seed.js       # Initial demo data
+│   ├── dataStore.js   # MongoDB/JSON data provider
+│   ├── seed.js        # SaaS demo school seed data
+│   └── server.js      # Express API and workflows
 ├── src/
-│   ├── App.jsx       # React ERP UI and modules
-│   ├── api.js        # API client and session helpers
-│   ├── main.jsx      # React entry point
-│   └── styles.css    # Responsive dashboard styling
-├── index.html
-├── package.json
-└── vite.config.js
+│   ├── App.jsx        # React SaaS dashboard and modules
+│   ├── api.js         # Axios API client and auth session
+│   ├── main.jsx       # React entry point
+│   └── style.css      # Tailwind layers/components
+├── tailwind.config.js
+├── postcss.config.js
+├── vite.config.js
+└── package.json
 ```
 
 ## Notes
 
-- The first server run creates `server/data/db.json`. Delete that file to reset demo data.
-- Use the Users module to add staff accounts.
-- This project is designed as a complete working base that can be extended with a relational database, permissions, SMS/email notifications, and online payment integrations.
+- The local JSON database is ignored by Git.
+- Set `MONGODB_URI` for a real MongoDB backend.
+- This is a complete working base that can be extended with file uploads, email/SMS notifications, online payments, and separate dashboards for parents, students and teachers.

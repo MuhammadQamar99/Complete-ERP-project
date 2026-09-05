@@ -1,27 +1,36 @@
 {
-  "name": "complete-school-erp-project",
-  "version": "1.0.0",
-  "description": "Complete school management ERP with React frontend and Express JSON API.",
+  "name": "school-saas-mern-management-system",
+  "version": "2.0.0",
+  "description": "Complete School Management System SaaS inspired by a MERN React, Tailwind, Node.js and MongoDB tutorial.",
   "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "node server/server.js",
     "client": "vite --host 0.0.0.0",
-    "server": "node server/index.js",
     "build": "vite build",
-    "start": "NODE_ENV=production node server/index.js",
-    "lint": "node --check server/index.js && vite build"
+    "start": "NODE_ENV=production node server/server.js",
+    "lint": "node --check server/server.js && node --check server/dataStore.js && vite build"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
+    "autoprefixer": "^10.4.21",
+    "axios": "latest",
     "bcryptjs": "latest",
     "concurrently": "latest",
     "cors": "latest",
+    "dotenv": "latest",
     "express": "latest",
     "jsonwebtoken": "latest",
+    "lucide-react": "latest",
+    "mongoose": "latest",
     "morgan": "latest",
     "nanoid": "latest",
+    "postcss": "^8.5.6",
     "react": "latest",
     "react-dom": "latest",
+    "react-router-dom": "latest",
+    "recharts": "latest",
+    "tailwindcss": "^3.4.17",
     "vite": "latest"
   },
   "devDependencies": {}

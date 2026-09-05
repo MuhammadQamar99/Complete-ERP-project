@@ -1,6 +1,6 @@
 node_modules/
 dist/
-server/data/
 .env
+server/storage/
 .DS_Store
 npm-debug.log*

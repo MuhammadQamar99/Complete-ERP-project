@@ -1,291 +1,204 @@
 import { useEffect, useMemo, useState } from 'react';
-import { api, clearSession, getSessionUser, setSession } from './api.js';
+import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Award, Banknote, BookOpen, CalendarCheck, FileBadge, GraduationCap, LayoutDashboard, LogOut, Menu, Receipt, School, ShieldCheck, UserPlus, UsersRound, WalletCards, X } from 'lucide-react';
+import { api, session } from './api.js';
 
-const navItems = [
-  ['dashboard', 'Dashboard', '📊'],
-  ['students', 'Students', '🎓'],
-  ['teachers', 'Teachers', '👩‍🏫'],
-  ['classes', 'Classes', '🏫'],
-  ['subjects', 'Subjects', '📚'],
-  ['attendance', 'Attendance', '✅'],
-  ['fees', 'Fees', '💳'],
-  ['exams', 'Exams & Results', '📝'],
-  ['timetable', 'Timetable', '🗓️'],
-  ['notices', 'Notices', '📢'],
-  ['reports', 'Reports', '📈'],
-  ['users', 'Users', '🔐']
+const modules = {
+  students: { title: 'Students', icon: GraduationCap, columns: ['admissionNo', 'name', 'className', 'section', 'guardian', 'phone', 'admissionStatus', 'status'], fields: [['admissionNo', 'Admission No'], ['name', 'Name'], ['gender', 'Gender', 'select', ['Male', 'Female', 'Other']], ['dob', 'Date of Birth', 'date'], ['className', 'Class'], ['section', 'Section'], ['rollNo', 'Roll No'], ['guardian', 'Guardian'], ['phone', 'Phone'], ['address', 'Address'], ['admissionStatus', 'Admission Status', 'select', ['Inquiry', 'Interview', 'Admitted', 'Rejected']], ['status', 'Status', 'select', ['Active', 'Inactive', 'Graduated']]] },
+  admissions: { title: 'Admissions CRM', icon: UserPlus, columns: ['studentName', 'guardian', 'desiredClass', 'phone', 'leadSource', 'stage', 'assignedTo'], fields: [['studentName', 'Student Name'], ['guardian', 'Guardian'], ['desiredClass', 'Desired Class'], ['phone', 'Phone'], ['leadSource', 'Lead Source', 'select', ['Walk-in', 'Facebook', 'Website', 'Referral']], ['stage', 'Stage', 'select', ['Inquiry', 'Interview', 'Fee Pending', 'Admitted', 'Rejected']], ['assignedTo', 'Assigned To'], ['notes', 'Notes', 'textarea']] },
+  teachers: { title: 'Teachers & HR', icon: UsersRound, columns: ['employeeNo', 'name', 'subject', 'department', 'qualification', 'phone', 'salary', 'status'], fields: [['employeeNo', 'Employee No'], ['name', 'Name'], ['subject', 'Subject'], ['department', 'Department'], ['qualification', 'Qualification'], ['phone', 'Phone'], ['salary', 'Salary', 'number'], ['joiningDate', 'Joining Date', 'date'], ['status', 'Status', 'select', ['Active', 'Inactive']]] },
+  classes: { title: 'Classes', icon: School, columns: ['name', 'section', 'room', 'capacity', 'classTeacher', 'monthlyFee'], fields: [['name', 'Class'], ['section', 'Section'], ['room', 'Room'], ['capacity', 'Capacity', 'number'], ['classTeacher', 'Class Teacher'], ['monthlyFee', 'Monthly Fee', 'number']] },
+  subjects: { title: 'Subjects', icon: BookOpen, columns: ['code', 'name', 'className', 'teacher', 'totalMarks'], fields: [['code', 'Code'], ['name', 'Subject'], ['className', 'Class'], ['teacher', 'Teacher'], ['totalMarks', 'Total Marks', 'number']] },
+  attendance: { title: 'Attendance', icon: CalendarCheck, columns: ['date', 'className', 'studentName', 'status', 'remarks'], fields: [['date', 'Date', 'date'], ['className', 'Class'], ['studentName', 'Student'], ['status', 'Status', 'select', ['Present', 'Absent', 'Late', 'Leave']], ['remarks', 'Remarks']] },
+  fees: { title: 'Fees & Finance', icon: WalletCards, columns: ['invoiceNo', 'studentName', 'month', 'amount', 'discount', 'paid', 'status', 'dueDate'], fields: [['invoiceNo', 'Invoice No'], ['studentName', 'Student'], ['month', 'Month'], ['amount', 'Amount', 'number'], ['discount', 'Discount', 'number'], ['paid', 'Paid', 'number'], ['dueDate', 'Due Date', 'date']] },
+  payroll: { title: 'HR Payroll', icon: Banknote, columns: ['employeeName', 'month', 'grossSalary', 'deductions', 'bonus', 'netSalary', 'status'], fields: [['employeeName', 'Employee'], ['month', 'Month'], ['grossSalary', 'Gross Salary', 'number'], ['deductions', 'Deductions', 'number'], ['bonus', 'Bonus', 'number'], ['netSalary', 'Net Salary', 'number'], ['status', 'Status', 'select', ['Pending', 'Processed', 'Paid']]] },
+  expenses: { title: 'Expenses', icon: Receipt, columns: ['title', 'category', 'amount', 'date', 'paidTo', 'status'], fields: [['title', 'Title'], ['category', 'Category', 'select', ['Academic', 'Utilities', 'Maintenance', 'Salary', 'Transport', 'Other']], ['amount', 'Amount', 'number'], ['date', 'Date', 'date'], ['paidTo', 'Paid To'], ['status', 'Status', 'select', ['Paid', 'Pending']]] },
+  exams: { title: 'Exams', icon: Award, columns: ['title', 'className', 'subject', 'date', 'maxMarks', 'status'], fields: [['title', 'Exam Title'], ['className', 'Class'], ['subject', 'Subject'], ['date', 'Date', 'date'], ['maxMarks', 'Max Marks', 'number'], ['status', 'Status', 'select', ['Draft', 'Scheduled', 'Completed']]] },
+  results: { title: 'Results', icon: Award, columns: ['examTitle', 'studentName', 'subject', 'marks', 'maxMarks', 'grade', 'remarks'], fields: [['examTitle', 'Exam'], ['studentName', 'Student'], ['subject', 'Subject'], ['marks', 'Marks', 'number'], ['maxMarks', 'Max Marks', 'number'], ['remarks', 'Remarks']] },
+  certificates: { title: 'Certificates', icon: FileBadge, columns: ['certificateNo', 'studentName', 'type', 'issueDate', 'purpose', 'issuedBy', 'status'], fields: [['certificateNo', 'Certificate No'], ['studentName', 'Student'], ['type', 'Type', 'select', ['Bonafide', 'Character', 'Transfer', 'Fee Clearance', 'Achievement']], ['issueDate', 'Issue Date', 'date'], ['purpose', 'Purpose'], ['issuedBy', 'Issued By'], ['status', 'Status', 'select', ['Draft', 'Issued']]] },
+  notices: { title: 'Notices', icon: ShieldCheck, columns: ['title', 'audience', 'date', 'priority', 'message'], fields: [['title', 'Title'], ['audience', 'Audience', 'select', ['All', 'Students', 'Parents', 'Teachers']], ['date', 'Date', 'date'], ['priority', 'Priority', 'select', ['Low', 'Medium', 'High']], ['message', 'Message', 'textarea']] },
+  users: { title: 'Users & Roles', icon: ShieldCheck, columns: ['name', 'email', 'role', 'permissions', 'status'], fields: [['name', 'Name'], ['email', 'Email'], ['password', 'Password', 'password'], ['role', 'Role', 'select', ['Super Admin', 'Principal', 'Teacher', 'Accountant', 'Reception']], ['permissions', 'Permissions comma separated'], ['status', 'Status', 'select', ['Active', 'Inactive']]] }
+};
+
+const nav = [
+  ['/', 'Dashboard', LayoutDashboard],
+  ...Object.entries(modules).map(([key, value]) => [`/${key}`, value.title, value.icon])
 ];
-
-const fields = {
-  students: [
-    ['admissionNo', 'Admission No'], ['name', 'Student Name'], ['gender', 'Gender', 'select', ['Male', 'Female', 'Other']], ['dob', 'Date of Birth', 'date'], ['guardian', 'Guardian'], ['phone', 'Phone'], ['email', 'Email'], ['classId', 'Class', 'relation', 'classes'], ['rollNo', 'Roll No'], ['address', 'Address'], ['admissionDate', 'Admission Date', 'date'], ['status', 'Status', 'select', ['Active', 'Inactive', 'Graduated']]
-  ],
-  teachers: [
-    ['employeeNo', 'Employee No'], ['name', 'Teacher Name'], ['gender', 'Gender', 'select', ['Male', 'Female', 'Other']], ['phone', 'Phone'], ['email', 'Email'], ['qualification', 'Qualification'], ['department', 'Department'], ['joiningDate', 'Joining Date', 'date'], ['salary', 'Salary', 'number'], ['status', 'Status', 'select', ['Active', 'Inactive']]
-  ],
-  classes: [
-    ['name', 'Class Name'], ['section', 'Section'], ['room', 'Room'], ['capacity', 'Capacity', 'number'], ['teacherId', 'Class Teacher', 'relation', 'teachers'], ['monthlyFee', 'Monthly Fee', 'number']
-  ],
-  subjects: [
-    ['code', 'Subject Code'], ['name', 'Subject Name'], ['classId', 'Class', 'relation', 'classes'], ['teacherId', 'Teacher', 'relation', 'teachers'], ['totalMarks', 'Total Marks', 'number']
-  ],
-  fees: [
-    ['invoiceNo', 'Invoice No'], ['studentId', 'Student', 'relation', 'students'], ['month', 'Month'], ['amount', 'Amount', 'number'], ['discount', 'Discount', 'number'], ['paid', 'Paid', 'number'], ['dueDate', 'Due Date', 'date'], ['paidAt', 'Paid At', 'date']
-  ],
-  expenses: [
-    ['title', 'Expense Title'], ['category', 'Category', 'select', ['Academic', 'Utilities', 'Maintenance', 'Salary', 'Transport', 'Other']], ['amount', 'Amount', 'number'], ['date', 'Date', 'date'], ['paidTo', 'Paid To'], ['status', 'Status', 'select', ['Paid', 'Pending']]
-  ],
-  exams: [
-    ['title', 'Exam Title'], ['classId', 'Class', 'relation', 'classes'], ['subjectId', 'Subject', 'relation', 'subjects'], ['date', 'Date', 'date'], ['maxMarks', 'Max Marks', 'number']
-  ],
-  results: [
-    ['examId', 'Exam', 'relation', 'exams'], ['studentId', 'Student', 'relation', 'students'], ['marks', 'Marks', 'number'], ['remarks', 'Remarks']
-  ],
-  timetable: [
-    ['classId', 'Class', 'relation', 'classes'], ['day', 'Day', 'select', ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']], ['period', 'Period'], ['subjectId', 'Subject', 'relation', 'subjects'], ['teacherId', 'Teacher', 'relation', 'teachers']
-  ],
-  notices: [
-    ['title', 'Title'], ['audience', 'Audience', 'select', ['All', 'Students', 'Parents', 'Teachers']], ['date', 'Date', 'date'], ['message', 'Message', 'textarea'], ['priority', 'Priority', 'select', ['Low', 'Medium', 'High']]
-  ],
-  users: [
-    ['name', 'Name'], ['email', 'Email'], ['password', 'Password', 'password'], ['role', 'Role', 'select', ['Administrator', 'Accountant', 'Teacher', 'Reception']], ['status', 'Status', 'select', ['Active', 'Inactive']]
-  ]
-};
-
-const columns = {
-  students: ['admissionNo', 'name', 'classId', 'rollNo', 'guardian', 'phone', 'status'],
-  teachers: ['employeeNo', 'name', 'department', 'phone', 'salary', 'status'],
-  classes: ['name', 'section', 'room', 'capacity', 'teacherId', 'monthlyFee'],
-  subjects: ['code', 'name', 'classId', 'teacherId', 'totalMarks'],
-  fees: ['invoiceNo', 'studentId', 'month', 'amount', 'discount', 'paid', 'status'],
-  expenses: ['title', 'category', 'amount', 'date', 'paidTo', 'status'],
-  exams: ['title', 'classId', 'subjectId', 'date', 'maxMarks'],
-  results: ['examId', 'studentId', 'marks', 'grade', 'remarks'],
-  timetable: ['classId', 'day', 'period', 'subjectId', 'teacherId'],
-  notices: ['title', 'audience', 'date', 'priority', 'message'],
-  users: ['name', 'email', 'role', 'status']
-};
-
-const relationLabel = {
-  students: (item) => item?.name,
-  teachers: (item) => item?.name,
-  classes: (item) => item ? `${item.name}-${item.section}` : '',
-  subjects: (item) => item ? `${item.code} ${item.name}` : '',
-  exams: (item, refs) => item ? `${item.title} (${displayValue('subjects', 'subjectId', item.subjectId, refs)})` : ''
-};
-
-function titleCase(value) {
-  return String(value).replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase());
-}
-
-function displayValue(module, key, value, refs) {
-  if (!value) return '—';
-  const field = (fields[module] || []).find((item) => item[0] === key);
-  if (field?.[2] === 'relation') {
-    const collection = field[3];
-    const found = refs[collection]?.find((item) => item.id === value);
-    return relationLabel[collection]?.(found, refs) || value;
-  }
-  if (typeof value === 'number') return value.toLocaleString();
-  return value;
-}
+const colors = ['#2563eb', '#f59e0b', '#ef4444', '#10b981'];
+const format = (value) => typeof value === 'number' ? value.toLocaleString() : Array.isArray(value) ? value.join(', ') : value || '—';
+const today = () => new Date().toISOString().slice(0, 10);
 
 function Login({ onLogin }) {
-  const [email, setEmail] = useState('admin@school.test');
-  const [password, setPassword] = useState('password123');
+  const [form, setForm] = useState({ email: 'admin@eduflow.test', password: 'password123' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  async function submit(event) {
-    event.preventDefault();
+  async function submit(e) {
+    e.preventDefault();
     setLoading(true);
     setError('');
     try {
-      const payload = await api.login(email, password);
-      setSession(payload);
+      const payload = await api.login(form);
+      session.set(payload);
       onLogin(payload.user);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { setError(err.message); }
+    finally { setLoading(false); }
   }
-
-  return <main className="login-page">
-    <form className="login-card" onSubmit={submit}>
-      <div className="brand-mark">ERP</div>
-      <h1>Complete School Management System</h1>
-      <p>Manage admissions, academics, attendance, fees, exams, reports, notices and staff from one dashboard.</p>
-      {error && <div className="alert error">{error}</div>}
-      <label>Email<input value={email} onChange={(e) => setEmail(e.target.value)} /></label>
-      <label>Password<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} /></label>
-      <button disabled={loading}>{loading ? 'Signing in...' : 'Sign in'}</button>
-      <small>Demo: admin@school.test / password123</small>
-    </form>
+  return <main className="min-h-screen overflow-hidden bg-slate-950 text-white">
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#2563eb55,transparent_35%),radial-gradient(circle_at_bottom_right,#14b8a655,transparent_30%)]" />
+    <div className="relative mx-auto grid min-h-screen max-w-6xl items-center gap-10 px-6 py-12 lg:grid-cols-2">
+      <section>
+        <span className="badge bg-white/10 text-cyan-200">MERN SaaS School Management</span>
+        <h1 className="mt-6 text-5xl font-black leading-tight md:text-6xl">Run every school department from one modern ERP.</h1>
+        <p className="mt-5 max-w-xl text-lg leading-8 text-slate-300">Admissions, students, teachers, HR payroll, fees, exams, results and certificate generation in a production-style React, Tailwind, Node and MongoDB architecture.</p>
+        <div className="mt-8 grid grid-cols-2 gap-3 text-sm text-slate-200">
+          {['Role-based access', 'SaaS school tenant', 'MongoDB ready', 'Printable certificates'].map((item) => <div key={item} className="rounded-2xl border border-white/10 bg-white/5 p-4">✓ {item}</div>)}
+        </div>
+      </section>
+      <form onSubmit={submit} className="rounded-[2rem] border border-white/10 bg-white p-8 text-slate-900 shadow-2xl">
+        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 text-2xl font-black text-white">EF</div>
+        <h2 className="text-3xl font-black">Welcome to EduFlow</h2>
+        <p className="mt-2 text-slate-500">Demo login is already filled in.</p>
+        {error && <div className="mt-5 rounded-xl bg-rose-50 p-3 text-sm font-bold text-rose-700">{error}</div>}
+        <div className="mt-6 grid gap-4">
+          <label>Email<input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
+          <label>Password<input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
+          <button className="btn-primary w-full" disabled={loading}>{loading ? 'Signing in...' : 'Sign in'}</button>
+          <p className="text-center text-xs text-slate-500">admin@eduflow.test / password123</p>
+        </div>
+      </form>
+    </div>
   </main>;
 }
 
-function Layout({ user, active, setActive, children, onLogout }) {
-  return <div className="shell">
-    <aside className="sidebar">
-      <div className="logo"><span>🏫</span><strong>School ERP</strong></div>
-      <nav>{navItems.map(([id, label, icon]) => <button key={id} className={active === id ? 'active' : ''} onClick={() => setActive(id)}><span>{icon}</span>{label}</button>)}</nav>
+function Shell({ user, setUser }) {
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  function logout() { session.clear(); setUser(null); navigate('/'); }
+  return <div className="min-h-screen bg-slate-100 lg:grid lg:grid-cols-[290px_1fr]">
+    <aside className={`${open ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-40 w-72 bg-slate-950 p-5 text-white transition lg:static lg:w-auto lg:translate-x-0`}>
+      <div className="mb-7 flex items-center justify-between">
+        <div className="flex items-center gap-3"><div className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-600 font-black">EF</div><div><strong className="text-lg">EduFlow SaaS</strong><p className="text-xs text-slate-400">School Management</p></div></div>
+        <button className="lg:hidden" onClick={() => setOpen(false)}><X /></button>
+      </div>
+      <nav className="grid gap-1">{nav.map(([path, label, Icon]) => <Link key={path} to={path} onClick={() => setOpen(false)} className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition ${location.pathname === path ? 'bg-white text-slate-950' : 'text-slate-300 hover:bg-white/10 hover:text-white'}`}><Icon size={18} />{label}</Link>)}</nav>
     </aside>
-    <section className="workspace">
-      <header className="topbar">
-        <div><h2>{navItems.find((item) => item[0] === active)?.[1]}</h2><p>Welcome back, {user.name}</p></div>
-        <div className="user-chip"><span>{user.role}</span><button onClick={onLogout}>Logout</button></div>
+    <main className="min-w-0 p-4 md:p-6">
+      <header className="mb-6 flex items-center justify-between rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center gap-3"><button className="btn-soft lg:hidden" onClick={() => setOpen(true)}><Menu size={18} /></button><div><h1 className="text-xl font-black md:text-2xl">{nav.find(([p]) => p === location.pathname)?.[1] || 'EduFlow'}</h1><p className="text-sm text-slate-500">{user.name} · {user.role}</p></div></div>
+        <button className="btn-soft flex items-center gap-2" onClick={logout}><LogOut size={16} /> Logout</button>
       </header>
-      {children}
-    </section>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        {Object.keys(modules).map((name) => <Route key={name} path={`/${name}`} element={name === 'attendance' ? <Attendance /> : name === 'fees' ? <Fees /> : name === 'payroll' ? <Payroll /> : name === 'certificates' ? <Certificates /> : <ModulePage name={name} />} />)}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </main>
   </div>;
 }
 
-function Dashboard({ setActive }) {
+function Dashboard() {
   const [data, setData] = useState(null);
-  const [error, setError] = useState('');
-  useEffect(() => { api.dashboard().then(setData).catch((err) => setError(err.message)); }, []);
-  if (error) return <div className="alert error">{error}</div>;
-  if (!data) return <div className="loading">Loading dashboard...</div>;
-  const cards = [
-    ['Students', data.cards.students, '🎓', 'students'], ['Teachers', data.cards.teachers, '👩‍🏫', 'teachers'], ['Classes', data.cards.classes, '🏫', 'classes'], ['Revenue', `Rs ${data.cards.totalRevenue.toLocaleString()}`, '💰', 'fees'], ['Dues', `Rs ${data.cards.totalDues.toLocaleString()}`, '⏳', 'fees'], ['Expenses', `Rs ${data.cards.expenses.toLocaleString()}`, '🧾', 'fees'], ['Attendance', `${data.cards.attendanceRate}%`, '✅', 'attendance']
+  useEffect(() => { api.dashboard().then(setData); }, []);
+  if (!data) return <div className="card animate-pulse">Loading dashboard...</div>;
+  const kpis = [
+    ['Students', data.kpis.students, GraduationCap], ['Teachers', data.kpis.teachers, UsersRound], ['Admissions', data.kpis.admissions, UserPlus], ['Revenue', `Rs ${data.kpis.revenue.toLocaleString()}`, WalletCards], ['Dues', `Rs ${data.kpis.due.toLocaleString()}`, Receipt], ['Payroll', `Rs ${data.kpis.payroll.toLocaleString()}`, Banknote], ['Expenses', `Rs ${data.kpis.expenses.toLocaleString()}`, Banknote], ['Attendance', `${data.kpis.attendance}%`, CalendarCheck]
   ];
-  return <div className="stack">
-    <div className="cards">{cards.map(([label, value, icon, target]) => <button className="metric-card" key={label} onClick={() => setActive(target)}><span>{icon}</span><p>{label}</p><strong>{value}</strong></button>)}</div>
-    <div className="grid two">
-      <section className="panel"><h3>Class strength</h3>{data.classWiseStudents.map((item) => <div className="bar-row" key={item.label}><span>{item.label}</span><div><b style={{ width: `${Math.max((item.value / item.capacity) * 100, 4)}%` }} /></div><em>{item.value}/{item.capacity}</em></div>)}</section>
-      <section className="panel"><h3>Pending fees</h3>{data.pendingFees.length ? data.pendingFees.map((fee) => <div className="list-item" key={fee.id}><strong>{fee.student}</strong><span>{fee.month} · Rs {(fee.amount - fee.discount - fee.paid).toLocaleString()} due</span></div>) : <p>No pending dues.</p>}</section>
+  const revenue = [{ month: 'Jun', revenue: 180000 }, { month: 'Jul', revenue: 230000 }, { month: 'Aug', revenue: 260000 }, { month: 'Sep', revenue: data.kpis.revenue }];
+  return <div className="grid gap-6">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{kpis.map(([label, value, Icon]) => <div key={label} className="card"><div className="mb-4 flex items-center justify-between"><div className="rounded-2xl bg-brand-50 p-3 text-brand-600"><Icon size={22} /></div><span className="text-xs font-black text-emerald-600">Live</span></div><p className="text-sm font-bold text-slate-500">{label}</p><strong className="mt-1 block text-2xl font-black">{value}</strong></div>)}</div>
+    <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
+      <section className="card"><h2 className="mb-4 text-lg font-black">Finance trend</h2><ResponsiveContainer width="100%" height={280}><AreaChart data={revenue}><defs><linearGradient id="rev" x1="0" x2="0" y1="0" y2="1"><stop offset="5%" stopColor="#2563eb" stopOpacity={0.35}/><stop offset="95%" stopColor="#2563eb" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="month"/><YAxis/><Tooltip/><Area type="monotone" dataKey="revenue" stroke="#2563eb" fill="url(#rev)" strokeWidth={3}/></AreaChart></ResponsiveContainer></section>
+      <section className="card"><h2 className="mb-4 text-lg font-black">Fee status</h2><ResponsiveContainer width="100%" height={280}><PieChart><Pie data={data.feeStatus} dataKey="value" nameKey="name" outerRadius={100} label>{data.feeStatus.map((_, i) => <Cell key={i} fill={colors[i]} />)}</Pie><Tooltip /></PieChart></ResponsiveContainer></section>
     </div>
-    <section className="panel"><h3>Latest notices</h3><div className="notice-grid">{data.recentNotices.map((notice) => <article key={notice.id}><span className={`badge ${notice.priority.toLowerCase()}`}>{notice.priority}</span><h4>{notice.title}</h4><p>{notice.message}</p><small>{notice.date} · {notice.audience}</small></article>)}</div></section>
+    <div className="grid gap-6 xl:grid-cols-2">
+      <section className="card"><h2 className="mb-4 text-lg font-black">Class strength</h2><ResponsiveContainer width="100%" height={260}><BarChart data={data.classStrength}><CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="name"/><YAxis/><Tooltip/><Bar dataKey="students" fill="#2563eb" radius={[10, 10, 0, 0]} /></BarChart></ResponsiveContainer></section>
+      <section className="card"><h2 className="mb-4 text-lg font-black">Admission pipeline</h2><div className="grid gap-3">{data.admissions.map((item) => <div className="rounded-2xl border border-slate-100 p-4" key={item.id}><strong>{item.studentName}</strong><p className="text-sm text-slate-500">{item.desiredClass} · {item.stage} · {item.phone}</p></div>)}</div></section>
+    </div>
   </div>;
 }
 
-function DataModule({ module, refs, refreshRefs }) {
+function ModulePage({ name }) {
+  const meta = modules[name];
   const [rows, setRows] = useState([]);
-  const [query, setQuery] = useState('');
-  const [editing, setEditing] = useState(null);
+  const [q, setQ] = useState('');
+  const [edit, setEdit] = useState(null);
   const [error, setError] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  async function load() {
-    const data = await api.list(module, query);
-    setRows(data);
+  async function load() { setRows(await api.list(name, q)); }
+  useEffect(() => { load().catch((err) => setError(err.message)); }, [name]);
+  async function save(payload) {
+    if (payload.permissions && typeof payload.permissions === 'string') payload.permissions = payload.permissions.split(',').map((x) => x.trim()).filter(Boolean);
+    if (payload.id) await api.update(name, payload.id, payload); else await api.create(name, payload);
+    setEdit(null); await load();
   }
-  useEffect(() => { load().catch((err) => setError(err.message)); }, [module]);
-
-  async function save(form) {
-    setSaving(true);
-    setError('');
-    try {
-      if (form.id) await api.update(module, form.id, form);
-      else await api.create(module, form);
-      setEditing(null);
-      await load();
-      await refreshRefs();
-    } catch (err) { setError(err.message); }
-    finally { setSaving(false); }
-  }
-  async function remove(id) {
-    if (!confirm('Delete this record?')) return;
-    await api.remove(module, id);
-    await load();
-    await refreshRefs();
-  }
-
-  return <div className="stack">
-    <div className="toolbar"><input placeholder={`Search ${module}...`} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && load()} /><button onClick={load}>Search</button><button className="primary" onClick={() => setEditing({})}>Add {titleCase(module.slice(0, -1))}</button></div>
-    {error && <div className="alert error">{error}</div>}
-    <div className="table-wrap"><table><thead><tr>{columns[module].map((col) => <th key={col}>{titleCase(col)}</th>)}<th>Actions</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}>{columns[module].map((col) => <td key={col}>{displayValue(module, col, row[col], refs)}</td>)}<td className="actions"><button onClick={() => setEditing(row)}>Edit</button><button className="danger" onClick={() => remove(row.id)}>Delete</button></td></tr>)}</tbody></table>{!rows.length && <div className="empty">No records found.</div>}</div>
-    {editing && <Editor module={module} value={editing} refs={refs} saving={saving} onCancel={() => setEditing(null)} onSave={save} />}
+  async function del(id) { if (confirm('Delete this record?')) { await api.remove(name, id); await load(); } }
+  return <div className="grid gap-5">
+    <div className="card flex flex-wrap items-end gap-3"><label className="min-w-64 flex-1">Search<input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && load()} placeholder={`Search ${meta.title}`} /></label><button className="btn-soft" onClick={load}>Search</button><button className="btn-primary" onClick={() => setEdit({})}>Add {meta.title}</button></div>
+    {error && <div className="rounded-2xl bg-rose-50 p-4 font-bold text-rose-700">{error}</div>}
+    <DataTable name={name} rows={rows} onEdit={setEdit} onDelete={del} />
+    {edit && <Editor name={name} value={edit} onCancel={() => setEdit(null)} onSave={save} />}
   </div>;
 }
 
-function Editor({ module, value, refs, onSave, onCancel, saving }) {
+function DataTable({ name, rows, onEdit, onDelete }) {
+  const meta = modules[name];
+  return <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-soft"><div className="overflow-auto"><table><thead><tr>{meta.columns.map((col) => <th key={col}>{col}</th>)}<th>Actions</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}>{meta.columns.map((col) => <td key={col}>{format(row[col])}</td>)}<td className="whitespace-nowrap"><button className="btn-soft mr-2" onClick={() => onEdit(row)}>Edit</button><button className="btn-danger" onClick={() => onDelete(row.id)}>Delete</button></td></tr>)}</tbody></table></div>{!rows.length && <div className="p-8 text-center font-bold text-slate-500">No records found.</div>}</div>;
+}
+
+function Editor({ name, value, onSave, onCancel }) {
   const [form, setForm] = useState(value);
-  const fieldList = fields[module];
-  function update(key, next) { setForm((old) => ({ ...old, [key]: next })); }
-  return <div className="modal-backdrop"><form className="modal" onSubmit={(e) => { e.preventDefault(); onSave(form); }}>
-    <header><h3>{form.id ? 'Edit' : 'Add'} {titleCase(module.slice(0, -1))}</h3><button type="button" onClick={onCancel}>×</button></header>
-    <div className="form-grid">{fieldList.map(([key, label, type = 'text', options]) => {
-      if (module === 'users' && form.id && key === 'password') return null;
-      if (type === 'textarea') return <label key={key} className="wide">{label}<textarea value={form[key] || ''} onChange={(e) => update(key, e.target.value)} /></label>;
-      if (type === 'select') return <label key={key}>{label}<select value={form[key] || ''} onChange={(e) => update(key, e.target.value)}><option value="">Select</option>{options.map((option) => <option key={option}>{option}</option>)}</select></label>;
-      if (type === 'relation') return <label key={key}>{label}<select value={form[key] || ''} onChange={(e) => update(key, e.target.value)}><option value="">Select</option>{(refs[options] || []).map((item) => <option value={item.id} key={item.id}>{relationLabel[options]?.(item, refs) || item.name || item.title}</option>)}</select></label>;
-      return <label key={key}>{label}<input type={type} value={form[key] || ''} onChange={(e) => update(key, type === 'number' ? Number(e.target.value) : e.target.value)} required={['name', 'title', 'email'].includes(key)} /></label>;
+  const meta = modules[name];
+  const set = (key, val, type) => setForm((old) => ({ ...old, [key]: type === 'number' ? Number(val) : val }));
+  return <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4"><form className="max-h-[92vh] w-full max-w-4xl overflow-auto rounded-[2rem] bg-white p-6 shadow-2xl" onSubmit={(e) => { e.preventDefault(); onSave(form); }}>
+    <div className="mb-5 flex items-center justify-between"><h2 className="text-2xl font-black">{form.id ? 'Edit' : 'Add'} {meta.title}</h2><button type="button" className="btn-soft" onClick={onCancel}>Close</button></div>
+    <div className="grid gap-4 md:grid-cols-2">{meta.fields.map(([key, label, type = 'text', options]) => {
+      if (name === 'users' && form.id && key === 'password') return null;
+      if (type === 'textarea') return <label className="md:col-span-2" key={key}>{label}<textarea value={form[key] || ''} onChange={(e) => set(key, e.target.value, type)} /></label>;
+      if (type === 'select') return <label key={key}>{label}<select value={form[key] || ''} onChange={(e) => set(key, e.target.value, type)}><option value="">Select</option>{options.map((option) => <option key={option}>{option}</option>)}</select></label>;
+      return <label key={key}>{label}<input type={type} value={Array.isArray(form[key]) ? form[key].join(', ') : form[key] || ''} onChange={(e) => set(key, e.target.value, type)} required={['name', 'studentName', 'title', 'email'].includes(key)} /></label>;
     })}</div>
-    <footer><button type="button" onClick={onCancel}>Cancel</button><button className="primary" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button></footer>
+    <div className="mt-6 flex justify-end gap-3"><button type="button" className="btn-soft" onClick={onCancel}>Cancel</button><button className="btn-primary">Save</button></div>
   </form></div>;
 }
 
-function Attendance({ refs, refreshRefs }) {
-  const today = new Date().toISOString().slice(0, 10);
-  const [classId, setClassId] = useState(refs.classes?.[0]?.id || '');
-  const [date, setDate] = useState(today);
+function Attendance() {
+  const [students, setStudents] = useState([]);
   const [records, setRecords] = useState({});
+  const [meta, setMeta] = useState({ date: today(), className: 'Grade 6' });
   const [message, setMessage] = useState('');
-  const students = refs.students.filter((student) => student.classId === classId);
-  useEffect(() => {
-    const latest = {};
-    refs.attendance.filter((item) => item.classId === classId && item.date === date).forEach((item) => { latest[item.studentId] = item.status; });
-    setRecords(latest);
-  }, [classId, date, refs.attendance]);
-  async function save() {
-    const payload = students.map((student) => ({ studentId: student.id, status: records[student.id] || 'Present' }));
-    const response = await api.saveAttendance({ date, classId, records: payload });
-    setMessage(response.message);
-    await refreshRefs();
+  useEffect(() => { api.list('students').then(setStudents); }, []);
+  const filtered = students.filter((s) => s.className === meta.className);
+  async function submit() {
+    const payload = filtered.map((s) => ({ studentName: s.name, status: records[s.id] || 'Present', remarks: '' }));
+    const res = await api.markAttendance({ ...meta, records: payload }); setMessage(res.message);
   }
-  return <div className="stack"><section className="panel"><div className="toolbar"><label>Date<input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label><label>Class<select value={classId} onChange={(e) => setClassId(e.target.value)}>{refs.classes.map((klass) => <option key={klass.id} value={klass.id}>{relationLabel.classes(klass)}</option>)}</select></label><button className="primary" onClick={save}>Save Attendance</button></div>{message && <div className="alert success">{message}</div>}<div className="attendance-grid">{students.map((student) => <article key={student.id}><strong>{student.name}</strong><small>{student.rollNo}</small><select value={records[student.id] || 'Present'} onChange={(e) => setRecords((old) => ({ ...old, [student.id]: e.target.value }))}><option>Present</option><option>Absent</option><option>Late</option><option>Leave</option></select></article>)}</div></section><DataModule module="attendance" refs={refs} refreshRefs={refreshRefs} /></div>;
+  return <div className="grid gap-5"><section className="card"><div className="flex flex-wrap items-end gap-3"><label>Date<input type="date" value={meta.date} onChange={(e) => setMeta({ ...meta, date: e.target.value })} /></label><label>Class<select value={meta.className} onChange={(e) => setMeta({ ...meta, className: e.target.value })}>{['Grade 6', 'Grade 7', 'Grade 8'].map((x) => <option key={x}>{x}</option>)}</select></label><button className="btn-primary" onClick={submit}>Save Attendance</button></div>{message && <p className="mt-4 rounded-2xl bg-emerald-50 p-3 font-bold text-emerald-700">{message}</p>}<div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{filtered.map((s) => <article className="rounded-2xl border border-slate-200 p-4" key={s.id}><strong>{s.name}</strong><p className="text-sm text-slate-500">{s.rollNo}</p><select className="mt-3" value={records[s.id] || 'Present'} onChange={(e) => setRecords({ ...records, [s.id]: e.target.value })}><option>Present</option><option>Absent</option><option>Late</option><option>Leave</option></select></article>)}</div></section><ModulePage name="attendance" /></div>;
 }
 
-function Fees({ refs, refreshRefs }) {
+function Fees() {
+  const [form, setForm] = useState({ month: 'September 2026', dueDate: '2026-09-10' });
+  const [msg, setMsg] = useState('');
+  async function generate() { const res = await api.generateFees(form); setMsg(res.message); }
+  return <div className="grid gap-5"><section className="card"><h2 className="mb-4 text-lg font-black">Monthly invoice generator</h2><div className="flex flex-wrap items-end gap-3"><label>Month<input value={form.month} onChange={(e) => setForm({ ...form, month: e.target.value })} /></label><label>Due Date<input type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} /></label><button className="btn-primary" onClick={generate}>Generate Invoices</button></div>{msg && <p className="mt-4 rounded-2xl bg-emerald-50 p-3 font-bold text-emerald-700">{msg}</p>}</section><ModulePage name="fees" /></div>;
+}
+
+function Payroll() {
   const [month, setMonth] = useState('September 2026');
-  const [dueDate, setDueDate] = useState('2026-09-10');
-  const [message, setMessage] = useState('');
-  async function generate() {
-    const response = await api.generateFees({ month, dueDate });
-    setMessage(response.message);
-    await refreshRefs();
-  }
-  return <div className="stack"><section className="panel"><h3>Monthly fee generator</h3><div className="toolbar"><input value={month} onChange={(e) => setMonth(e.target.value)} /><input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /><button className="primary" onClick={generate}>Generate Invoices</button></div>{message && <div className="alert success">{message}</div>}</section><DataModule module="fees" refs={refs} refreshRefs={refreshRefs} /></div>;
+  const [msg, setMsg] = useState('');
+  async function process() { const res = await api.processPayroll({ month }); setMsg(res.message); }
+  return <div className="grid gap-5"><section className="card"><h2 className="mb-4 text-lg font-black">Payroll processor</h2><div className="flex flex-wrap items-end gap-3"><label>Month<input value={month} onChange={(e) => setMonth(e.target.value)} /></label><button className="btn-primary" onClick={process}>Prepare Salary Slips</button></div>{msg && <p className="mt-4 rounded-2xl bg-emerald-50 p-3 font-bold text-emerald-700">{msg}</p>}</section><ModulePage name="payroll" /></div>;
 }
 
-function Exams({ refs, refreshRefs }) {
-  return <div className="grid two"><section><h3>Exam schedule</h3><DataModule module="exams" refs={refs} refreshRefs={refreshRefs} /></section><section><h3>Results</h3><DataModule module="results" refs={refs} refreshRefs={refreshRefs} /></section></div>;
-}
-
-function Reports({ refs }) {
-  const [studentId, setStudentId] = useState(refs.students?.[0]?.id || '');
-  const [report, setReport] = useState(null);
-  async function load() { if (studentId) setReport(await api.studentReport(studentId)); }
-  const totalPaid = report?.fees.reduce((sum, fee) => sum + Number(fee.paid || 0), 0) || 0;
-  const totalDue = report?.fees.reduce((sum, fee) => sum + Math.max(Number(fee.amount || 0) - Number(fee.discount || 0) - Number(fee.paid || 0), 0), 0) || 0;
-  const present = report?.attendance.filter((item) => ['Present', 'Late'].includes(item.status)).length || 0;
-  return <div className="stack"><section className="panel"><div className="toolbar"><select value={studentId} onChange={(e) => setStudentId(e.target.value)}>{refs.students.map((student) => <option key={student.id} value={student.id}>{student.name}</option>)}</select><button className="primary" onClick={load}>Build Student Report</button><button onClick={() => print()}>Print</button></div></section>{report && <section className="panel report"><h2>{report.student.name}</h2><p>{report.student.admissionNo} · {report.class?.name}-{report.class?.section} · Guardian: {report.student.guardian}</p><div className="cards"><div className="metric-card"><p>Fee Paid</p><strong>Rs {totalPaid.toLocaleString()}</strong></div><div className="metric-card"><p>Fee Due</p><strong>Rs {totalDue.toLocaleString()}</strong></div><div className="metric-card"><p>Attendance</p><strong>{report.attendance.length ? Math.round((present / report.attendance.length) * 100) : 0}%</strong></div></div><h3>Results</h3><table><thead><tr><th>Exam</th><th>Marks</th><th>Grade</th><th>Remarks</th></tr></thead><tbody>{report.results.map((row) => <tr key={row.id}><td>{row.exam?.title}</td><td>{row.marks}/{row.exam?.maxMarks}</td><td>{row.grade}</td><td>{row.remarks}</td></tr>)}</tbody></table></section>}</div>;
+function Certificates() {
+  const [selected, setSelected] = useState(null);
+  return <div className="grid gap-5"><ModulePage name="certificates" /><section className="card"><h2 className="mb-4 text-lg font-black">Certificate print preview</h2><button className="btn-soft mb-4" onClick={async () => setSelected((await api.list('certificates'))[0])}>Load Latest Certificate</button>{selected && <div className="mx-auto max-w-3xl border-4 border-double border-slate-800 bg-white p-10 text-center print:border-slate-900"><h1 className="text-4xl font-black">Certificate of {selected.type}</h1><p className="mt-8 text-lg leading-9">This is to certify that <b>{selected.studentName}</b> has been issued this certificate for <b>{selected.purpose}</b>.</p><p className="mt-6">Certificate No: {selected.certificateNo} · Date: {selected.issueDate}</p><div className="mt-16 flex justify-between"><span>School Seal</span><span>{selected.issuedBy}<br/>Authorized Signature</span></div><button className="btn-primary mt-8 print:hidden" onClick={() => print()}>Print Certificate</button></div>}</section></div>;
 }
 
 function App() {
-  const [user, setUser] = useState(getSessionUser());
-  const [active, setActive] = useState('dashboard');
-  const [refs, setRefs] = useState({ students: [], teachers: [], classes: [], subjects: [], exams: [], attendance: [] });
-
-  async function refreshRefs() {
-    if (!localStorage.getItem('school_erp_token')) return;
-    const [students, teachers, classes, subjects, exams, attendance] = await Promise.all(['students', 'teachers', 'classes', 'subjects', 'exams', 'attendance'].map((module) => api.list(module)));
-    setRefs({ students, teachers, classes, subjects, exams, attendance });
-  }
-  useEffect(() => { refreshRefs().catch(() => clearSession()); }, [user]);
-  const page = useMemo(() => {
-    if (active === 'dashboard') return <Dashboard setActive={setActive} />;
-    if (active === 'attendance') return <Attendance refs={refs} refreshRefs={refreshRefs} />;
-    if (active === 'fees') return <Fees refs={refs} refreshRefs={refreshRefs} />;
-    if (active === 'exams') return <Exams refs={refs} refreshRefs={refreshRefs} />;
-    if (active === 'reports') return <Reports refs={refs} />;
-    return <DataModule module={active} refs={refs} refreshRefs={refreshRefs} />;
-  }, [active, refs]);
-
+  const [user, setUser] = useState(session.user());
   if (!user) return <Login onLogin={setUser} />;
-  return <Layout user={user} active={active} setActive={setActive} onLogout={() => { clearSession(); setUser(null); }}><>{page}</></Layout>;
+  return <Shell user={user} setUser={setUser} />;
 }
 
 export default App;

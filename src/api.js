@@ -1,47 +1,41 @@
-const API_BASE = import.meta.env.VITE_API_BASE || '/api';
+import axios from 'axios';
 
-export function getToken() {
-  return localStorage.getItem('school_erp_token');
-}
+const client = axios.create({ baseURL: '/api' });
 
-export function setSession(payload) {
-  localStorage.setItem('school_erp_token', payload.token);
-  localStorage.setItem('school_erp_user', JSON.stringify(payload.user));
-}
+client.interceptors.request.use((config) => {
+  const token = localStorage.getItem('eduflow_token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
-export function getSessionUser() {
-  const raw = localStorage.getItem('school_erp_user');
-  return raw ? JSON.parse(raw) : null;
-}
+client.interceptors.response.use(
+  (response) => response.data,
+  (error) => Promise.reject(new Error(error.response?.data?.message || error.message || 'Request failed'))
+);
 
-export function clearSession() {
-  localStorage.removeItem('school_erp_token');
-  localStorage.removeItem('school_erp_user');
-}
-
-export async function request(path, options = {}) {
-  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
-  const token = getToken();
-  if (token) headers.Authorization = `Bearer ${token}`;
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers,
-    body: options.body && typeof options.body !== 'string' ? JSON.stringify(options.body) : options.body
-  });
-  if (response.status === 204) return null;
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.message || 'Something went wrong');
-  return data;
-}
+export const session = {
+  set(payload) {
+    localStorage.setItem('eduflow_token', payload.token);
+    localStorage.setItem('eduflow_user', JSON.stringify(payload.user));
+  },
+  user() {
+    const raw = localStorage.getItem('eduflow_user');
+    return raw ? JSON.parse(raw) : null;
+  },
+  clear() {
+    localStorage.removeItem('eduflow_token');
+    localStorage.removeItem('eduflow_user');
+  }
+};
 
 export const api = {
-  login: (email, password) => request('/auth/login', { method: 'POST', body: { email, password } }),
-  dashboard: () => request('/dashboard'),
-  list: (collection, q = '') => request(`/${collection}${q ? `?q=${encodeURIComponent(q)}` : ''}`),
-  create: (collection, body) => request(`/${collection}`, { method: 'POST', body }),
-  update: (collection, id, body) => request(`/${collection}/${id}`, { method: 'PUT', body }),
-  remove: (collection, id) => request(`/${collection}/${id}`, { method: 'DELETE' }),
-  saveAttendance: (body) => request('/attendance/bulk', { method: 'POST', body }),
-  generateFees: (body) => request('/fees/generate-monthly', { method: 'POST', body }),
-  studentReport: (id) => request(`/reports/student/${id}`)
+  login: (credentials) => client.post('/auth/login', credentials),
+  dashboard: () => client.get('/dashboard'),
+  list: (collection, q = '') => client.get(`/${collection}${q ? `?q=${encodeURIComponent(q)}` : ''}`),
+  create: (collection, payload) => client.post(`/${collection}`, payload),
+  update: (collection, id, payload) => client.put(`/${collection}/${id}`, payload),
+  remove: (collection, id) => client.delete(`/${collection}/${id}`),
+  markAttendance: (payload) => client.post('/workflows/mark-attendance', payload),
+  generateFees: (payload) => client.post('/workflows/generate-fees', payload),
+  processPayroll: (payload) => client.post('/workflows/process-payroll', payload)
 };

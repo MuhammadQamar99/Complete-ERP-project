@@ -1,74 +1,71 @@
-export const seedData = {
+export const passwordHash = '$2b$10$uKmBRduNl65qif5TBnYTDOrAYWjYPSWvR0qLwAiqSxiIko41ioQPO';
+
+export const seed = {
+  schools: [
+    { id: 'school-1', name: 'EduFlow Model School', slug: 'eduflow', plan: 'Pro', city: 'Rawalpindi', owner: 'System Administrator', status: 'Active' }
+  ],
   users: [
-    {
-      id: 'usr-admin',
-      name: 'System Administrator',
-      email: 'admin@school.test',
-      password: '$2b$10$uKmBRduNl65qif5TBnYTDOrAYWjYPSWvR0qLwAiqSxiIko41ioQPO',
-      role: 'Administrator',
-      status: 'Active'
-    },
-    {
-      id: 'usr-accountant',
-      name: 'Accounts Officer',
-      email: 'accounts@school.test',
-      password: '$2b$10$uKmBRduNl65qif5TBnYTDOrAYWjYPSWvR0qLwAiqSxiIko41ioQPO',
-      role: 'Accountant',
-      status: 'Active'
-    }
-  ],
-  teachers: [
-    { id: 't-1', employeeNo: 'EMP-001', name: 'Ayesha Khan', gender: 'Female', phone: '+92 300 1111111', email: 'ayesha@school.test', qualification: 'MSc Mathematics', department: 'Science', joiningDate: '2021-08-15', salary: 85000, status: 'Active' },
-    { id: 't-2', employeeNo: 'EMP-002', name: 'Bilal Ahmed', gender: 'Male', phone: '+92 300 2222222', email: 'bilal@school.test', qualification: 'MA English', department: 'Languages', joiningDate: '2020-04-01', salary: 78000, status: 'Active' },
-    { id: 't-3', employeeNo: 'EMP-003', name: 'Sara Malik', gender: 'Female', phone: '+92 300 3333333', email: 'sara@school.test', qualification: 'MCS', department: 'Computer Science', joiningDate: '2022-01-10', salary: 82000, status: 'Active' }
-  ],
-  classes: [
-    { id: 'c-1', name: 'Class 6', section: 'A', room: 'Room 101', capacity: 35, teacherId: 't-1', monthlyFee: 4500 },
-    { id: 'c-2', name: 'Class 7', section: 'A', room: 'Room 102', capacity: 35, teacherId: 't-2', monthlyFee: 5000 },
-    { id: 'c-3', name: 'Class 8', section: 'B', room: 'Room 205', capacity: 30, teacherId: 't-3', monthlyFee: 5500 }
-  ],
-  subjects: [
-    { id: 'sub-1', code: 'MATH-6', name: 'Mathematics', classId: 'c-1', teacherId: 't-1', totalMarks: 100 },
-    { id: 'sub-2', code: 'ENG-7', name: 'English', classId: 'c-2', teacherId: 't-2', totalMarks: 100 },
-    { id: 'sub-3', code: 'CS-8', name: 'Computer Science', classId: 'c-3', teacherId: 't-3', totalMarks: 100 }
+    { id: 'u-admin', schoolId: 'school-1', name: 'System Administrator', email: 'admin@eduflow.test', password: passwordHash, role: 'Super Admin', permissions: ['all'], status: 'Active' },
+    { id: 'u-principal', schoolId: 'school-1', name: 'Principal Office', email: 'principal@eduflow.test', password: passwordHash, role: 'Principal', permissions: ['academics', 'hr', 'finance'], status: 'Active' },
+    { id: 'u-accountant', schoolId: 'school-1', name: 'Finance Manager', email: 'finance@eduflow.test', password: passwordHash, role: 'Accountant', permissions: ['finance'], status: 'Active' }
   ],
   students: [
-    { id: 's-1', admissionNo: 'ADM-1001', name: 'Hamza Ali', gender: 'Male', dob: '2012-03-11', guardian: 'Ali Raza', phone: '+92 311 1234567', email: 'hamza@example.com', classId: 'c-1', rollNo: '06-A-01', address: 'Lahore', admissionDate: '2023-04-05', status: 'Active' },
-    { id: 's-2', admissionNo: 'ADM-1002', name: 'Fatima Noor', gender: 'Female', dob: '2011-09-22', guardian: 'Noor Ahmed', phone: '+92 311 2345678', email: 'fatima@example.com', classId: 'c-2', rollNo: '07-A-03', address: 'Karachi', admissionDate: '2022-04-05', status: 'Active' },
-    { id: 's-3', admissionNo: 'ADM-1003', name: 'Usman Tariq', gender: 'Male', dob: '2010-12-02', guardian: 'Tariq Mehmood', phone: '+92 311 3456789', email: 'usman@example.com', classId: 'c-3', rollNo: '08-B-02', address: 'Islamabad', admissionDate: '2021-04-08', status: 'Active' },
-    { id: 's-4', admissionNo: 'ADM-1004', name: 'Zara Shah', gender: 'Female', dob: '2012-07-19', guardian: 'Shahbaz Shah', phone: '+92 311 4567890', email: 'zara@example.com', classId: 'c-1', rollNo: '06-A-02', address: 'Multan', admissionDate: '2023-05-01', status: 'Active' }
+    { id: 'stu-1001', schoolId: 'school-1', admissionNo: 'ADM-1001', name: 'Hamza Ali', gender: 'Male', dob: '2012-03-11', className: 'Grade 6', section: 'A', rollNo: '06-A-01', guardian: 'Ali Raza', phone: '+92 311 1234567', address: 'Rawalpindi', admissionStatus: 'Admitted', status: 'Active' },
+    { id: 'stu-1002', schoolId: 'school-1', admissionNo: 'ADM-1002', name: 'Fatima Noor', gender: 'Female', dob: '2011-09-22', className: 'Grade 7', section: 'A', rollNo: '07-A-03', guardian: 'Noor Ahmed', phone: '+92 311 2345678', address: 'Islamabad', admissionStatus: 'Admitted', status: 'Active' },
+    { id: 'stu-1003', schoolId: 'school-1', admissionNo: 'ADM-1003', name: 'Usman Tariq', gender: 'Male', dob: '2010-12-02', className: 'Grade 8', section: 'B', rollNo: '08-B-02', guardian: 'Tariq Mehmood', phone: '+92 311 3456789', address: 'Lahore', admissionStatus: 'Admitted', status: 'Active' },
+    { id: 'stu-1004', schoolId: 'school-1', admissionNo: 'ADM-1004', name: 'Zara Shah', gender: 'Female', dob: '2012-07-19', className: 'Grade 6', section: 'A', rollNo: '06-A-02', guardian: 'Shahbaz Shah', phone: '+92 311 4567890', address: 'Multan', admissionStatus: 'Inquiry', status: 'Active' }
+  ],
+  teachers: [
+    { id: 'tea-001', schoolId: 'school-1', employeeNo: 'EMP-001', name: 'Ayesha Khan', subject: 'Mathematics', department: 'Science', qualification: 'MSc Mathematics', phone: '+92 300 1111111', salary: 85000, joiningDate: '2021-08-15', status: 'Active' },
+    { id: 'tea-002', schoolId: 'school-1', employeeNo: 'EMP-002', name: 'Bilal Ahmed', subject: 'English', department: 'Languages', qualification: 'MA English', phone: '+92 300 2222222', salary: 78000, joiningDate: '2020-04-01', status: 'Active' },
+    { id: 'tea-003', schoolId: 'school-1', employeeNo: 'EMP-003', name: 'Sara Malik', subject: 'Computer Science', department: 'IT', qualification: 'MCS', phone: '+92 300 3333333', salary: 82000, joiningDate: '2022-01-10', status: 'Active' }
+  ],
+  classes: [
+    { id: 'cls-6a', schoolId: 'school-1', name: 'Grade 6', section: 'A', room: 'Room 101', capacity: 35, classTeacher: 'Ayesha Khan', monthlyFee: 4500 },
+    { id: 'cls-7a', schoolId: 'school-1', name: 'Grade 7', section: 'A', room: 'Room 102', capacity: 35, classTeacher: 'Bilal Ahmed', monthlyFee: 5000 },
+    { id: 'cls-8b', schoolId: 'school-1', name: 'Grade 8', section: 'B', room: 'Room 205', capacity: 30, classTeacher: 'Sara Malik', monthlyFee: 5500 }
+  ],
+  subjects: [
+    { id: 'sub-math', schoolId: 'school-1', code: 'MATH-6', name: 'Mathematics', className: 'Grade 6', teacher: 'Ayesha Khan', totalMarks: 100 },
+    { id: 'sub-eng', schoolId: 'school-1', code: 'ENG-7', name: 'English', className: 'Grade 7', teacher: 'Bilal Ahmed', totalMarks: 100 },
+    { id: 'sub-cs', schoolId: 'school-1', code: 'CS-8', name: 'Computer Science', className: 'Grade 8', teacher: 'Sara Malik', totalMarks: 100 }
+  ],
+  admissions: [
+    { id: 'adm-01', schoolId: 'school-1', studentName: 'Maham Iqbal', guardian: 'Iqbal Hussain', desiredClass: 'Grade 5', phone: '+92 322 1234567', leadSource: 'Walk-in', stage: 'Interview', assignedTo: 'Reception', notes: 'Interview scheduled this week' },
+    { id: 'adm-02', schoolId: 'school-1', studentName: 'Danish Khan', guardian: 'Akram Khan', desiredClass: 'Grade 9', phone: '+92 322 7654321', leadSource: 'Facebook', stage: 'Fee Pending', assignedTo: 'Accounts', notes: 'Admission approved' }
   ],
   attendance: [
-    { id: 'a-1', date: '2026-09-01', classId: 'c-1', studentId: 's-1', status: 'Present', remarks: '' },
-    { id: 'a-2', date: '2026-09-01', classId: 'c-1', studentId: 's-4', status: 'Late', remarks: 'Arrived at 8:25 AM' },
-    { id: 'a-3', date: '2026-09-01', classId: 'c-2', studentId: 's-2', status: 'Present', remarks: '' },
-    { id: 'a-4', date: '2026-09-01', classId: 'c-3', studentId: 's-3', status: 'Absent', remarks: 'Parent informed' }
+    { id: 'att-01', schoolId: 'school-1', date: '2026-09-04', className: 'Grade 6', studentName: 'Hamza Ali', status: 'Present', remarks: '' },
+    { id: 'att-02', schoolId: 'school-1', date: '2026-09-04', className: 'Grade 6', studentName: 'Zara Shah', status: 'Late', remarks: 'Arrived 8:20 AM' },
+    { id: 'att-03', schoolId: 'school-1', date: '2026-09-04', className: 'Grade 7', studentName: 'Fatima Noor', status: 'Present', remarks: '' },
+    { id: 'att-04', schoolId: 'school-1', date: '2026-09-04', className: 'Grade 8', studentName: 'Usman Tariq', status: 'Absent', remarks: 'Parent informed' }
   ],
   fees: [
-    { id: 'f-1', invoiceNo: 'INV-1001', studentId: 's-1', month: 'September 2026', amount: 4500, discount: 0, paid: 4500, dueDate: '2026-09-10', paidAt: '2026-09-02', status: 'Paid' },
-    { id: 'f-2', invoiceNo: 'INV-1002', studentId: 's-2', month: 'September 2026', amount: 5000, discount: 500, paid: 0, dueDate: '2026-09-10', paidAt: '', status: 'Unpaid' },
-    { id: 'f-3', invoiceNo: 'INV-1003', studentId: 's-3', month: 'September 2026', amount: 5500, discount: 0, paid: 2500, dueDate: '2026-09-10', paidAt: '2026-09-03', status: 'Partial' }
+    { id: 'fee-01', schoolId: 'school-1', invoiceNo: 'INV-1001', studentName: 'Hamza Ali', month: 'September 2026', amount: 4500, discount: 0, paid: 4500, status: 'Paid', dueDate: '2026-09-10' },
+    { id: 'fee-02', schoolId: 'school-1', invoiceNo: 'INV-1002', studentName: 'Fatima Noor', month: 'September 2026', amount: 5000, discount: 500, paid: 0, status: 'Unpaid', dueDate: '2026-09-10' },
+    { id: 'fee-03', schoolId: 'school-1', invoiceNo: 'INV-1003', studentName: 'Usman Tariq', month: 'September 2026', amount: 5500, discount: 0, paid: 2500, status: 'Partial', dueDate: '2026-09-10' }
+  ],
+  payroll: [
+    { id: 'pay-01', schoolId: 'school-1', employeeName: 'Ayesha Khan', month: 'September 2026', grossSalary: 85000, deductions: 3000, bonus: 5000, netSalary: 87000, status: 'Processed' },
+    { id: 'pay-02', schoolId: 'school-1', employeeName: 'Bilal Ahmed', month: 'September 2026', grossSalary: 78000, deductions: 2000, bonus: 0, netSalary: 76000, status: 'Pending' }
   ],
   expenses: [
-    { id: 'e-1', title: 'Lab supplies', category: 'Academic', amount: 12000, date: '2026-09-02', paidTo: 'Science Store', status: 'Paid' },
-    { id: 'e-2', title: 'Internet bill', category: 'Utilities', amount: 8500, date: '2026-09-04', paidTo: 'ISP', status: 'Paid' }
+    { id: 'exp-01', schoolId: 'school-1', title: 'Lab supplies', category: 'Academic', amount: 12000, date: '2026-09-02', paidTo: 'Science Store', status: 'Paid' },
+    { id: 'exp-02', schoolId: 'school-1', title: 'Internet bill', category: 'Utilities', amount: 8500, date: '2026-09-04', paidTo: 'ISP', status: 'Paid' }
   ],
   exams: [
-    { id: 'ex-1', title: 'First Term', classId: 'c-1', subjectId: 'sub-1', date: '2026-09-20', maxMarks: 100 },
-    { id: 'ex-2', title: 'First Term', classId: 'c-2', subjectId: 'sub-2', date: '2026-09-21', maxMarks: 100 }
+    { id: 'exam-01', schoolId: 'school-1', title: 'First Term', className: 'Grade 6', subject: 'Mathematics', date: '2026-09-20', maxMarks: 100, status: 'Scheduled' },
+    { id: 'exam-02', schoolId: 'school-1', title: 'First Term', className: 'Grade 7', subject: 'English', date: '2026-09-21', maxMarks: 100, status: 'Scheduled' }
   ],
   results: [
-    { id: 'r-1', examId: 'ex-1', studentId: 's-1', marks: 87, grade: 'A', remarks: 'Excellent' },
-    { id: 'r-2', examId: 'ex-1', studentId: 's-4', marks: 74, grade: 'B', remarks: 'Good' },
-    { id: 'r-3', examId: 'ex-2', studentId: 's-2', marks: 91, grade: 'A+', remarks: 'Outstanding' }
+    { id: 'res-01', schoolId: 'school-1', examTitle: 'First Term', studentName: 'Hamza Ali', subject: 'Mathematics', marks: 87, maxMarks: 100, grade: 'A', remarks: 'Excellent' },
+    { id: 'res-02', schoolId: 'school-1', examTitle: 'First Term', studentName: 'Fatima Noor', subject: 'English', marks: 91, maxMarks: 100, grade: 'A+', remarks: 'Outstanding' }
   ],
-  timetable: [
-    { id: 'tt-1', classId: 'c-1', day: 'Monday', period: '08:00 - 08:45', subjectId: 'sub-1', teacherId: 't-1' },
-    { id: 'tt-2', classId: 'c-2', day: 'Tuesday', period: '09:00 - 09:45', subjectId: 'sub-2', teacherId: 't-2' },
-    { id: 'tt-3', classId: 'c-3', day: 'Wednesday', period: '10:00 - 10:45', subjectId: 'sub-3', teacherId: 't-3' }
+  certificates: [
+    { id: 'cert-01', schoolId: 'school-1', certificateNo: 'CERT-1001', studentName: 'Hamza Ali', type: 'Bonafide', issueDate: '2026-09-04', purpose: 'Bank account opening', issuedBy: 'Principal', status: 'Issued' }
   ],
   notices: [
-    { id: 'n-1', title: 'Parent teacher meeting', audience: 'Parents', date: '2026-09-12', message: 'Parents are invited to meet class teachers on Saturday at 10:00 AM.', priority: 'High' },
-    { id: 'n-2', title: 'Science fair registration', audience: 'Students', date: '2026-09-18', message: 'Submit project proposals to the science department before Friday.', priority: 'Medium' }
+    { id: 'not-01', schoolId: 'school-1', title: 'Parent Teacher Meeting', audience: 'Parents', date: '2026-09-12', priority: 'High', message: 'Parents are invited to meet class teachers at 10:00 AM.' },
+    { id: 'not-02', schoolId: 'school-1', title: 'Science Fair Registration', audience: 'Students', date: '2026-09-18', priority: 'Medium', message: 'Submit project proposals before Friday.' }
   ]
 };
